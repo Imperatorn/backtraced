@@ -1,4 +1,4 @@
-module backtrace;
+module seh;
 
 import core.demangle;
 import std.conv;
