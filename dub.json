@@ -1,0 +1,11 @@
+{
+	"authors": [
+		"ryuukk",
+		"johan.forsberg"
+	],
+	"copyright": "Copyright © 2023",
+	"description": "Unhandled SEH for D",
+	"license": "Creative Commons Zero v1.0 Universal",
+	"name": "seh",
+	"targetType": "library"
+}
