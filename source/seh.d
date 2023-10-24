@@ -122,7 +122,7 @@ version (Posix)
 
     // TODO: clean this mess
     // TODO: use core.demangle instead
-    extern (C) void handler(int sig) nothrow @nogc
+    extern (C) void handler(int sig) nothrow
     {
         enum MAX_DEPTH = 32;
 
