@@ -1,12 +1,10 @@
 module seh;
-
 import core.demangle;
 import std.conv;
 import std.algorithm.searching;
 
 version (Windows)
 {
-
     pragma(lib, "dbghelp.lib");
     import core.sys.windows.windows;
     import core.sys.windows.dbghelp;
@@ -102,7 +100,7 @@ version (Windows)
 
 version (Posix)
 {
-    import core.stdc.signal : SIGSEGV, SIGFPE, SIGILL, SIGABRT, signal;
+    import core.stdc.signal : SIGSEGV, SIGFPE, SIGILL, SIGABRT, signal, sigfn_t;
     import core.stdc.stdlib : free, exit;
     import core.stdc.string : strlen, memcpy;
     import core.stdc.stdio : fprintf, stderr, sprintf, fgets, fclose, FILE;
@@ -116,13 +114,13 @@ version (Posix)
 
     extern (C) export void register()
     {
-        signal(SIGSEGV, &handler);
-        signal(SIGUSR1, &handler);
+        signal(SIGSEGV, cast(sigfn_t)&handler);
+        signal(SIGUSR1, cast(sigfn_t)&handler);
     }
 
     // TODO: clean this mess
     // TODO: use core.demangle instead
-    extern (C) void handler(int sig) nothrow @nogc @system
+    extern (C) void handler(int sig)
     {
         enum MAX_DEPTH = 32;
 
@@ -213,7 +211,7 @@ version (Posix)
     }
 
     // https://stackoverflow.com/questions/56046062/linux-addr2line-command-returns-0/63856113#63856113
-    size_t convert_to_vma(size_t addr) nothrow @nogc
+    size_t convert_to_vma(size_t addr) 
     {
         Dl_info info;
         link_map* link_map;
