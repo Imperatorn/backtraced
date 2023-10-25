@@ -128,7 +128,7 @@ else version (Darwin)
     import core.demangle : demangle;
 }
 
-version (Posix) version (Darwin)
+version (Posix) 
 {
     extern (C) export void register()
     {
