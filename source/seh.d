@@ -2,7 +2,7 @@ module seh;
 import core.demangle;
 import std.conv;
 import std.algorithm.searching;
-
+import std.system;
 import std.string;
 
 pragma(msg, os);
