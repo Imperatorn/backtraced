@@ -203,7 +203,17 @@ version (cool)
                 }
             }
 
-            auto addr = convert_to_vma(cast(size_t) trace[i]);
+            size_t addr;
+
+            version (OSX)
+            {
+                addr = cast(size_t) trace[i];
+            }
+            else
+            {
+                addr = convert_to_vma(cast(size_t) trace[i]);
+            }
+
             FILE* fp;
             
             version(OSX) {
