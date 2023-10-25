@@ -3,6 +3,8 @@ import core.demangle;
 import std.conv;
 import std.algorithm.searching;
 
+import std.string;
+
 version (Windows)
 {
     pragma(lib, "dbghelp.lib");
@@ -11,8 +13,7 @@ version (Windows)
     import core.stdc.stdlib : free, calloc;
     import core.stdc.stdio : fprintf, stderr;
     import core.stdc.string : memcpy, strncmp, strlen;
-    import std.string;
-
+    
     struct SYMBOL_INFO
     {
         ULONG SizeOfStruct;
@@ -118,8 +119,6 @@ version (Posix)
         signal(SIGUSR1, cast(sigfn_t)&handler);
     }
 
-    // TODO: clean this mess
-    // TODO: use core.demangle instead
     extern (C) void handler(int sig)
     {
         enum MAX_DEPTH = 32;
@@ -145,7 +144,7 @@ version (Posix)
         }
 
         fprintf(stderr, "-------------------------------------------------------------------+\r\n");
-        fprintf(stderr, "Received signal '%s' (%d)\r\n", signal_string.ptr, sig);
+        fprintf(stderr, "Received '%s' (0x%X)\r\n", signal_string.ptr, sig);
         fprintf(stderr, "-------------------------------------------------------------------+\r\n");
 
         void*[MAX_DEPTH] trace;
@@ -171,7 +170,6 @@ version (Posix)
             int endParenthesis;
             for (int j = 0; j < len; j++)
             {
-                // ()
                 if (!insideParenthesis && line[j] == '(')
                 {
                     insideParenthesis = true;
@@ -183,22 +181,26 @@ version (Posix)
                     endParenthesis = j;
                 }
             }
+
             auto addr = convert_to_vma(cast(size_t) trace[i]);
             FILE* fp;
 
-            auto locLen = sprintf(&syscom[0], "addr2line -e %s %p | ddemangle", &my_exe[0], addr);
+            auto locLen = sprintf(&syscom[0], "addr2line -e %s %p", &my_exe[0], addr);
             fp = popen(&syscom[0], "r");
 
             auto loc = fgets(&output[0], output.length, fp);
             fclose(fp);
 
-            // printf("loc: %s\n", loc);
-
             auto getLen = strlen(output.ptr);
 
             char[256] func = 0;
             memcpy(func.ptr, &line[startParenthesis], (endParenthesis - startParenthesis));
-            sprintf(&syscom[0], "echo '%s' | ddemangle", func.ptr);
+
+            auto s = fromStringz(func.ptr);
+
+            auto funcName = demangle(s);
+
+            sprintf(&syscom[0], "echo '%s'", toStringz(funcName));
             fp = popen(&syscom[0], "r");
 
             output[getLen - 1] = ' '; // strip new line
@@ -211,7 +213,7 @@ version (Posix)
     }
 
     // https://stackoverflow.com/questions/56046062/linux-addr2line-command-returns-0/63856113#63856113
-    size_t convert_to_vma(size_t addr) 
+    size_t convert_to_vma(size_t addr)
     {
         Dl_info info;
         link_map* link_map;
