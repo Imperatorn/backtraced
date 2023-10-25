@@ -101,6 +101,7 @@ version (Windows)
 
 version (Posix)
 {
+    version = cool;
     import core.stdc.signal : SIGSEGV, SIGFPE, SIGILL, SIGABRT, signal, sigfn_t;
     import core.stdc.stdlib : free, exit;
     import core.stdc.string : strlen, memcpy;
@@ -115,6 +116,7 @@ version (Posix)
 }
 else version (Darwin)
 {
+    version = cool;
     import core.stdc.signal;
     import core.stdc.stdlib;
     import core.stdc.string;
@@ -128,7 +130,7 @@ else version (Darwin)
     import core.demangle : demangle;
 }
 
-version (Posix) 
+version (cool) 
 {
     extern (C) export void register()
     {
