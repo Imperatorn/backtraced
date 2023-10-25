@@ -114,7 +114,8 @@ version (Posix)
     import core.sys.linux.link : link_map;
     import core.demangle : demangle;
 }
-else version (Darwin)
+
+version (Darwin)
 {
     version = cool;
     import core.stdc.signal;
