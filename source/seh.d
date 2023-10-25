@@ -127,7 +127,7 @@ version (OSX)
     import core.stdc.stdio : fprintf, stderr, sprintf, fgets, fclose, FILE;
     import core.sys.posix.stdio;
     import core.sys.posix.signal;
-    import core.sys.posix.execinfo;
+    import core.sys.linux.execinfo;
     import core.sys.posix.dlfcn;
     import core.sys.linux.link;
     import core.demangle : demangle;
