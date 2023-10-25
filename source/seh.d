@@ -117,7 +117,7 @@ version (Posix)
     import core.demangle : demangle;
 }
 
-version (Darwin)
+version (OSX)
 {
     version = cool;
     import core.stdc.signal;
@@ -132,9 +132,6 @@ version (Darwin)
     import core.sys.linux.link;
     import core.demangle : demangle;
 }
-
-version (OSX)
-    version = cool;
 
 version (cool) 
 {
