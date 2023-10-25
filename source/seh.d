@@ -159,7 +159,7 @@ version (Posix)
         readlink("/proc/self/exe", &my_exe[0], BUF_SIZE);
 
         fprintf(stderr, "executable: %s\n", &my_exe[0]);
-        fprintf(stderr, "backtrace: %i\n", stack_depth);
+        //fprintf(stderr, "frames: %i\n", stack_depth);
 
         for (auto i = 2; i < stack_depth; ++i)
         {
