@@ -13,7 +13,7 @@ version (Windows)
     import core.stdc.stdlib : free, calloc;
     import core.stdc.stdio : fprintf, stderr;
     import core.stdc.string : memcpy, strncmp, strlen;
-    
+
     struct SYMBOL_INFO
     {
         ULONG SizeOfStruct;
@@ -105,14 +105,31 @@ version (Posix)
     import core.stdc.stdlib : free, exit;
     import core.stdc.string : strlen, memcpy;
     import core.stdc.stdio : fprintf, stderr, sprintf, fgets, fclose, FILE;
-    import core.sys.posix.unistd : STDERR_FILENO, readlink;
+    import core.sys.posix.unistd;
     import core.sys.posix.signal : SIGUSR1;
     import core.sys.posix.stdio : popen, pclose;
     import core.sys.linux.execinfo : backtrace, backtrace_symbols;
     import core.sys.linux.dlfcn : dladdr, dladdr1, Dl_info, RTLD_DL_LINKMAP;
     import core.sys.linux.link : link_map;
     import core.demangle : demangle;
+}
+else version (Darwin)
+{
+    import core.stdc.signal;
+    import core.stdc.stdlib;
+    import core.stdc.string;
+    import core.sys.posix.unistd;
+    import core.stdc.stdio : fprintf, stderr, sprintf, fgets, fclose, FILE;
+    import core.sys.posix.stdio;
+    import core.sys.posix.signal;
+    import core.sys.darwin.execinfo;
+    import core.sys.darwin.dlfcn;
+    import core.sys.linux.link;
+    import core.demangle : demangle;
+}
 
+version (Posix) version (Darwin)
+{
     extern (C) export void register()
     {
         signal(SIGSEGV, cast(sigfn_t)&handler);
@@ -159,7 +176,6 @@ version (Posix)
         readlink("/proc/self/exe", &my_exe[0], BUF_SIZE);
 
         fprintf(stderr, "executable: %s\n", &my_exe[0]);
-        //fprintf(stderr, "frames: %i\n", stack_depth);
 
         for (auto i = 2; i < stack_depth; ++i)
         {
