@@ -130,6 +130,9 @@ else version (Darwin)
     import core.demangle : demangle;
 }
 
+version (OSX)
+    version = cool;
+
 version (cool) 
 {
     extern (C) export void register()
