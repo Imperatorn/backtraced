@@ -208,11 +208,18 @@ version (cool)
 
             auto addr = convert_to_vma(cast(size_t) trace[i]);
             FILE* fp;
+            
+            version(OSX) {
+                // Use 'atos' command specific for macOS
+                sprintf(&syscom[0], "atos -o %s %p", &my_exe[0], addr);
+            } else {
+                // This will be used for other systems; original 'addr2line' command
+                sprintf(&syscom[0], "addr2line -e %s %p", &my_exe[0], addr);
+            }
 
-            auto locLen = sprintf(&syscom[0], "addr2line -e %s %p", &my_exe[0], addr);
             fp = popen(&syscom[0], "r");
 
-            auto loc = fgets(&output[0], output.length, fp);
+            fgets(&output[0], output.length, fp);
             fclose(fp);
 
             auto getLen = strlen(output.ptr);
@@ -228,12 +235,13 @@ version (cool)
             fp = popen(&syscom[0], "r");
 
             output[getLen - 1] = ' '; // strip new line
-            auto locD = fgets(&output[getLen], cast(int)(output.length - getLen), fp);
+            fgets(&output[getLen], cast(int)(output.length - getLen), fp);
             fclose(fp);
 
             fprintf(stderr, "%s", output.ptr);
         }
-        exit(-1);
+
+        exit(sig);
     }
 
     // https://stackoverflow.com/questions/56046062/linux-addr2line-command-returns-0/63856113#63856113
