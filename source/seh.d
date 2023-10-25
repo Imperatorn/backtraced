@@ -5,6 +5,8 @@ import std.algorithm.searching;
 
 import std.string;
 
+pragma(msg, os);
+
 version (Windows)
 {
     pragma(lib, "dbghelp.lib");
