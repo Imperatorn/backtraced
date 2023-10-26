@@ -1,4 +1,4 @@
-NOTE: This is a work in progress. Not expected to work on Mac yet
+NOTE: This is a work in progress
 
 ```d
 import seh;
