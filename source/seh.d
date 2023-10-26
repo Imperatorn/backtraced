@@ -200,8 +200,6 @@ version (cool)
 
         fprintf(stderr, "executable: %s\n", &my_exe[0]);
 
-        import core.stdc.stdio;
-
         for (auto i = 2; i < stack_depth; ++i)
         {
             auto line = strings[i];
