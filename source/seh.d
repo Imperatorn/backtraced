@@ -101,8 +101,25 @@ version (Windows)
     }
 }
 
-version (Posix)
+version (OSX)
 {
+    pragma(msg, "OSX");
+    version = cool;
+    import core.stdc.stdlib;
+    import core.stdc.string;
+    import core.sys.posix.unistd;
+    import core.stdc.stdio : fprintf, stderr, sprintf, fgets, fclose, FILE;
+    import core.sys.posix.stdio;
+    import core.sys.posix.signal;
+    import core.sys.darwin.execinfo;
+    import core.sys.posix.dlfcn;
+    import core.demangle : demangle;
+
+    extern (C) int _NSGetExecutablePath(char* buf, uint* bufsize) nothrow;
+}
+else version (Posix)
+{
+    pragma(msg, "Posix");
     version = cool;
     import core.stdc.signal : SIGSEGV, SIGFPE, SIGILL, SIGABRT, signal, sigfn_t;
     import core.stdc.stdlib : free, exit;
@@ -117,31 +134,26 @@ version (Posix)
     import core.demangle : demangle;
 }
 
-version (OSX)
-{
-    version = cool;
-    import core.stdc.signal;
-    import core.stdc.stdlib;
-    import core.stdc.string;
-    import core.sys.posix.unistd;
-    import core.stdc.stdio : fprintf, stderr, sprintf, fgets, fclose, FILE;
-    import core.sys.posix.stdio;
-    import core.sys.posix.signal;
-    import core.sys.darwin.execinfo;
-    import core.sys.posix.dlfcn;
-    import core.sys.linux.link;
-    import core.demangle : demangle;
-}
-
-version (cool) 
+version (cool)
 {
     extern (C) export void register()
     {
-        signal(SIGSEGV, cast(sigfn_t)&handler);
-        signal(SIGUSR1, cast(sigfn_t)&handler);
+        version (OSX)
+        {
+            extern (C) void function(int) nothrow @nogc nogcHandler = cast(
+                void function(int) nothrow @nogc)&handler;
+
+            signal(SIGSEGV, nogcHandler);
+            signal(SIGUSR1, nogcHandler);
+        }
+        else
+        {
+            signal(SIGSEGV, cast(sigfn_t)&handler);
+            signal(SIGUSR1, cast(sigfn_t)&handler);
+        }
     }
 
-    extern (C) void handler(int sig)
+    extern (C) void handler(int sig) nothrow
     {
         enum MAX_DEPTH = 32;
 
@@ -178,7 +190,13 @@ version (cool)
         char[BUF_SIZE] my_exe = 0;
         char[BUF_SIZE] output = 0;
 
-        readlink("/proc/self/exe", &my_exe[0], BUF_SIZE);
+        version (OSX)
+        {
+            uint bufsize = BUF_SIZE;
+            _NSGetExecutablePath(cast(char*) my_exe, &bufsize);
+        }
+        else
+            readlink("/proc/self/exe", &my_exe[0], BUF_SIZE);
 
         fprintf(stderr, "executable: %s\n", &my_exe[0]);
 
@@ -205,21 +223,14 @@ version (cool)
 
             size_t addr;
 
-            version (OSX)
-            {
-                addr = cast(size_t) trace[i];
-            }
-            else
-            {
-                addr = convert_to_vma(cast(size_t) trace[i]);
-            }
+            addr = convert_to_vma(cast(size_t) trace[i]);
 
             FILE* fp;
-            
-            version(OSX) {
-                // Use 'atos' command specific for macOS
+
+            version (OSX)
                 sprintf(&syscom[0], "atos -o %s %p", &my_exe[0], addr);
-            } else {
+            else
+            {
                 // This will be used for other systems; original 'addr2line' command
                 sprintf(&syscom[0], "addr2line -e %s %p", &my_exe[0], addr);
             }
@@ -241,8 +252,12 @@ version (cool)
             sprintf(&syscom[0], "echo '%s'", toStringz(funcName));
             fp = popen(&syscom[0], "r");
 
-            output[getLen - 1] = ' '; // strip new line
-            fgets(&output[getLen], cast(int)(output.length - getLen), fp);
+            if (getLen > 1)
+            {
+                output[getLen - 1] = ' '; // strip new line
+                fgets(&output[getLen], cast(int)(output.length - getLen), fp);
+            }
+
             fclose(fp);
 
             fprintf(stderr, "%s", output.ptr);
@@ -252,11 +267,16 @@ version (cool)
     }
 
     // https://stackoverflow.com/questions/56046062/linux-addr2line-command-returns-0/63856113#63856113
-    size_t convert_to_vma(size_t addr)
+    size_t convert_to_vma(size_t addr) nothrow @nogc
     {
-        Dl_info info;
-        link_map* link_map;
-        dladdr1(cast(void*) addr, &info, cast(void**)&link_map, RTLD_DL_LINKMAP);
-        return addr - link_map.l_addr;
+        version (OSX)
+            return addr;
+        else
+        {
+            Dl_info info;
+            link_map* link_map;
+            dladdr1(cast(void*) addr, &info, cast(void**)&link_map, RTLD_DL_LINKMAP);
+            return addr - link_map.l_addr;
+        }
     }
 }
