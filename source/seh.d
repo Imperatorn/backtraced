@@ -5,6 +5,8 @@ import std.algorithm.searching;
 import std.system;
 import std.string;
 
+pragma(msg, os);
+
 version (Windows)
 {
     pragma(lib, "dbghelp.lib");
@@ -101,6 +103,7 @@ version (Windows)
 
 version (OSX)
 {
+    pragma(msg, "OSX");
     version = cool;
     import core.stdc.stdlib;
     import core.stdc.string;
@@ -116,6 +119,7 @@ version (OSX)
 }
 else version (Posix)
 {
+    pragma(msg, "Posix");
     version = cool;
     import core.stdc.signal : SIGSEGV, SIGFPE, SIGILL, SIGABRT, signal, sigfn_t;
     import core.stdc.stdlib : free, exit;
@@ -195,6 +199,8 @@ version (cool)
             readlink("/proc/self/exe", &my_exe[0], BUF_SIZE);
 
         fprintf(stderr, "executable: %s\n", &my_exe[0]);
+
+        import core.stdc.stdio;
 
         for (auto i = 2; i < stack_depth; ++i)
         {
