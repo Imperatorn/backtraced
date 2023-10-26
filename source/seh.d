@@ -204,73 +204,81 @@ version (cool)
         {
             auto line = strings[i];
             auto len = strlen(line);
-            bool insideParenthesis;
-            int startParenthesis;
-            int endParenthesis;
-            for (int j = 0; j < len; j++)
-            {
-                if (!insideParenthesis && line[j] == '(')
-                {
-                    insideParenthesis = true;
-                    startParenthesis = j + 1;
-                }
-                else if (insideParenthesis && line[j] == ')')
-                {
-                    insideParenthesis = false;
-                    endParenthesis = j;
-                }
-            }
-
-            size_t addr;
-
-            addr = convert_to_vma(cast(size_t) trace[i]);
-
-            FILE* fp;
 
             version (OSX)
-                sprintf(&syscom[0], "atos -o %s %p", &my_exe[0], addr);
+            {
+                puts(&line[0]);
+            }
             else
             {
-                // This will be used for other systems; original 'addr2line' command
+                bool insideParenthesis;
+                int startParenthesis;
+                int endParenthesis;
+                for (int j = 0; j < len; j++)
+                {
+                    if (!insideParenthesis && line[j] == '(')
+                    {
+                        insideParenthesis = true;
+                        startParenthesis = j + 1;
+                    }
+                    else if (insideParenthesis && line[j] == ')')
+                    {
+                        insideParenthesis = false;
+                        endParenthesis = j;
+                    }
+                }
+
+                size_t addr = convert_to_vma(cast(size_t) trace[i]);
+
+                FILE* fp;
+
                 sprintf(&syscom[0], "addr2line -e %s %p", &my_exe[0], addr);
+
+                fp = popen(&syscom[0], "r");
+
+                fgets(&output[0], output.length, fp);
+                fclose(fp);
+
+                auto getLen = strlen(output.ptr);
+
+                char[256] func = 0;
+                memcpy(func.ptr, &line[startParenthesis], (endParenthesis - startParenthesis));
+
+                auto s = fromStringz(func.ptr);
+
+                auto funcName = demangle(s);
+
+                sprintf(&syscom[0], "echo '%s'", toStringz(funcName));
+
+                fp = popen(&syscom[0], "r");
+
+                if (getLen > 1)
+                {
+                    output[getLen - 1] = ' ';
+                    fgets(&output[getLen], cast(int)(output.length - getLen), fp);
+                }
+
+                fclose(fp);
+
+                fprintf(stderr, "%s", output.ptr);
             }
-
-            fp = popen(&syscom[0], "r");
-
-            fgets(&output[0], output.length, fp);
-            fclose(fp);
-
-            auto getLen = strlen(output.ptr);
-
-            char[256] func = 0;
-            memcpy(func.ptr, &line[startParenthesis], (endParenthesis - startParenthesis));
-
-            auto s = fromStringz(func.ptr);
-
-            auto funcName = demangle(s);
-
-            sprintf(&syscom[0], "echo '%s'", toStringz(funcName));
-            fp = popen(&syscom[0], "r");
-
-            if (getLen > 1)
-            {
-                output[getLen - 1] = ' '; // strip new line
-                fgets(&output[getLen], cast(int)(output.length - getLen), fp);
-            }
-
-            fclose(fp);
-
-            fprintf(stderr, "%s", output.ptr);
         }
 
-        exit(sig);
+        exit(0);
     }
 
     // https://stackoverflow.com/questions/56046062/linux-addr2line-command-returns-0/63856113#63856113
     size_t convert_to_vma(size_t addr) nothrow @nogc
     {
         version (OSX)
-            return addr;
+        {
+            Dl_info info;
+            dladdr(cast(void*) addr, &info);
+
+            uintptr_t offset = cast(uintptr_t) addr - cast(uintptr_t) info.dli_fbase;
+
+            return offset;
+        }
         else
         {
             Dl_info info;
