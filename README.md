@@ -1,3 +1,5 @@
+NOTE: This is a work in progress. Not expected to work on Mac yet
+
 ```d
 import seh;
 import std.stdio;
