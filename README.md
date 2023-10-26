@@ -29,7 +29,11 @@ void MyPreciousFunction()
 
 Run dub
 
-Windows:
+[Windows]
+
+Tested on: \
+x64 Windows (10.0.19045)
+
 ```cmd
 Will now trigger a null reference exception
 Doing wonderful stuff
@@ -46,7 +50,18 @@ D:\a\_work\1\s\src\vctools\crt\vcstartup\src\startup\exe_common.inl:288 - BaseTh
 D:\a\_work\1\s\src\vctools\crt\vcstartup\src\startup\exe_common.inl:288 - RtlUserThreadStart
 ```
 
-OSX:
+[OSX]
+
+Tested on: \
+ProductName:    Mac OS X \
+ProductVersion: 10.12.6 \
+BuildVersion:   16G29
+
+Also tested on: \
+ProductName:        macOS \
+ProductVersion:        13.5.2 \
+BuildVersion:        22G91
+
 ```bash
 -------------------------------------------------------------------+
 Received 'SIGSEGV' (0xB)
@@ -61,7 +76,12 @@ executable: /Users/macos/src/test/test
 8   ???                                 0x0000000000000001 0x0 + 1
 ```
 
-Linux:
+[Linux]
+
+Tested on: \
+x64 WSL2 (5.10.102.1-microsoft-standard-WSL2) \
+aarc64 Raspberry PI and a custom yocto image
+
 ```bash
 -------------------------------------------------------------------+
 Received 'SIGSEGV' (0xB)
