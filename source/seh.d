@@ -5,8 +5,6 @@ import std.algorithm.searching;
 import std.system;
 import std.string;
 
-pragma(msg, os);
-
 version (Windows)
 {
     pragma(lib, "dbghelp.lib");
@@ -103,7 +101,6 @@ version (Windows)
 
 version (OSX)
 {
-    pragma(msg, "OSX");
     version = cool;
     import core.stdc.stdlib;
     import core.stdc.string;
@@ -119,9 +116,8 @@ version (OSX)
 }
 else version (Posix)
 {
-    pragma(msg, "Posix");
     version = cool;
-    import core.stdc.signal : SIGSEGV, SIGFPE, SIGILL, SIGABRT, signal, sigfn_t;
+    import core.stdc.signal : SIGSEGV, SIGFPE, SIGILL, SIGABRT, signal;
     import core.stdc.stdlib : free, exit;
     import core.stdc.string : strlen, memcpy;
     import core.stdc.stdio : fprintf, stderr, sprintf, fgets, fclose, FILE;
@@ -138,19 +134,11 @@ version (cool)
 {
     extern (C) export void register()
     {
-        version (OSX)
-        {
-            extern (C) void function(int) nothrow @nogc nogcHandler = cast(
-                void function(int) nothrow @nogc)&handler;
+        extern (C) void function(int) nothrow @nogc nogcHandler = cast(
+            void function(int) nothrow @nogc)&handler;
 
-            signal(SIGSEGV, nogcHandler);
-            signal(SIGUSR1, nogcHandler);
-        }
-        else
-        {
-            signal(SIGSEGV, cast(sigfn_t)&handler);
-            signal(SIGUSR1, cast(sigfn_t)&handler);
-        }
+        signal(SIGSEGV, nogcHandler);
+        signal(SIGUSR1, nogcHandler);
     }
 
     extern (C) void handler(int sig) nothrow
